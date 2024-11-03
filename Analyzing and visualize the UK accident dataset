@@ -1,0 +1,82 @@
+import pandas as pd
+
+# Load the data
+file_path = r"C:\temp\jupyter\UK_Accident.csv"
+df = pd.read_csv(file_path)
+
+# Show basic information and sample data
+print(df.info())
+print(df.head())
+# Check for missing values
+missing_values = df.isnull().sum()
+print("Missing values:\n", missing_values)
+
+# Drop rows with missing values (or you may choose to fill/transform them as appropriate)
+df = df.dropna()
+
+# ACCIDENT FREQUENCY BY TIME OF DAY
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Convert the 'Time' column to datetime if necessary
+df['Time'] = pd.to_datetime(df['Time'], errors='coerce').dt.hour
+
+# Plot accident frequency by hour
+plt.figure(figsize=(10, 6))
+sns.histplot(df['Time'], bins=24, kde=True)
+plt.title("Accident Frequency by Hour of Day")
+plt.xlabel("Hour of Day")
+plt.ylabel("Accident Count")
+plt.show()
+
+#ACCIDENT FREQUENCY BY WEATHER CONDITIONS
+# Assuming 'Weather_Conditions' column exists and has categorical values like "Clear", "Rainy", etc.
+plt.figure(figsize=(10, 6))
+sns.countplot(data=df, x='Weather_Conditions', order=df['Weather_Conditions'].value_counts().index)
+plt.xticks(rotation=45)
+plt.title("Accident Frequency by Weather Condition")
+plt.xlabel("Weather Condition")
+plt.ylabel("Accident Count")
+plt.show()
+
+#ACCIDENT FREQUENCY  BY ROAD CONDITIONS
+# Assuming 'Road_Surface_Conditions' column exists
+plt.figure(figsize=(10, 6))
+sns.countplot(data=df, x='Road_Surface_Conditions', order=df['Road_Surface_Conditions'].value_counts().index)
+plt.xticks(rotation=45)
+plt.title("Accident Frequency by Road Surface Condition")
+plt.xlabel("Road Surface Condition")
+plt.ylabel("Accident Count")
+plt.show()
+
+#MAPPING ACCIDENT LOCATIONS
+import folium
+from folium.plugins import HeatMap
+
+# Create a map centered around the median location
+latitude = df['Latitude'].median()
+longitude = df['Longitude'].median()
+
+m = folium.Map(location=[latitude, longitude], zoom_start=10)
+
+# Prepare data for the heatmap, removing rows without latitude and longitude
+heat_data = [[row['Latitude'], row['Longitude']] for index, row in df.dropna(subset=['Latitude', 'Longitude']).iterrows()]
+
+# Add HeatMap to map
+HeatMap(heat_data).add_to(m)
+
+# Save and show the map
+m.save("accident_hotspot_map.html")
+m
+
+# PLOTTING ACCIDENTS BY ROAD AND WEATHER CONDITIONS
+plt.figure(figsize=(12, 8))
+sns.countplot(data=df, x='Road_Surface_Conditions', hue='Weather_Conditions')
+plt.xticks(rotation=45)
+plt.title("Accidents by Road and Weather Conditions")
+plt.xlabel("Road Surface Condition")
+plt.ylabel("Accident Count")
+plt.legend(title="Weather Condition")
+plt.show()
+
+
